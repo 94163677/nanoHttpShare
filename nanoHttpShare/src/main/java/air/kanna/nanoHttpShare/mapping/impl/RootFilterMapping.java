@@ -1,7 +1,5 @@
 package air.kanna.nanoHttpShare.mapping.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,8 +7,8 @@ import air.kanna.nanoHttpShare.ShareHttpService;
 import air.kanna.nanoHttpShare.logger.Logger;
 import air.kanna.nanoHttpShare.logger.LoggerProvider;
 import air.kanna.nanoHttpShare.mapping.FilterMapping;
+import air.kanna.nanoHttpShare.mapping.FilterMappingUtil;
 import air.kanna.nanoHttpShare.mapping.MappingFunction;
-import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Method;
 import fi.iki.elonen.NanoHTTPD.Response;
@@ -57,7 +55,7 @@ public class RootFilterMapping implements FilterMapping {
 
     private Response getRootResponse(IHTTPSession session) {
         StringBuilder builder = new StringBuilder();
-        builder.append("<!DOCTYPE html>\n<html>\n<head>\n<style type=\"text/css\">\n.rootMenu {\nwidth: 90%;\nheight: 50px;\nmargin-top: 20px;\n")
+        builder.append("<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<style type=\"text/css\">\n.rootMenu {\nwidth: 90%;\nheight: 50px;\nmargin-top: 20px;\n")
             .append("font-size: large;\n}\n</style>\n</head><body><center><h1>NanoHttpShare</h1></center>\n");
         
         if(functions.size() <= 0) {
@@ -75,16 +73,7 @@ public class RootFilterMapping implements FilterMapping {
     }
     
     private Response getIconResponse(IHTTPSession session) {
-        try {
-            InputStream ins = ClassLoader.getSystemResourceAsStream("air/kanna/nanoHttpShare/data/HttpShareIcon.ico");
-            if(ins == null || ins.available() <= 0) {
-                return ShareHttpService.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_HTML, "");
-            }
-            return ShareHttpService.newFixedLengthResponse(Status.OK, "image/x-icon", ins, ins.available());
-        }catch(IOException e) {
-            logger.warn("", e);
-            return ShareHttpService.newFixedLengthResponse(Status.INTERNAL_ERROR, NanoHTTPD.MIME_HTML, e.getMessage());
-        }
+        return FilterMappingUtil.getResourceResponse("air/kanna/nanoHttpShare/data/HttpShareIcon.ico");
     }
 
     public List<MappingFunction> getFunctions() {

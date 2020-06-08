@@ -1,5 +1,6 @@
 package air.kanna.nanoHttpShare.util;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,8 +13,49 @@ import java.util.Map;
 public class MIMEUtil {
     private static Map<String, String> MIME_MAP = new HashMap<>();
     
+    public static String getMIME(String path) {
+        if(path == null || StringTool.isAllSpacesString(path)) {
+            return null;
+        }
+        if(path.endsWith(".")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        int idx = path.lastIndexOf('.');
+        if(idx >= 0) {
+            path = path.substring(idx + 1);
+        }
+        path = path.toLowerCase();
+        return MIME_MAP.get(path);
+    }
+    
+    public static String getMIME(File file) {
+        if(file == null || !file.isFile()) {
+            return null;
+        }
+        return getMIME(file.getName());
+    }
+    
+    public static String getMIMEWithDefault(String path) {
+        String mime = getMIME(path);
+        if(path == null) {
+            return getDefaultMIME();
+        }
+        return mime;
+    }
+    
+    public static String getMIMEWithDefault(File file) {
+        if(file == null || !file.isFile()) {
+            return getDefaultMIME();
+        }
+        return getMIMEWithDefault(file.getName());
+    }
+    
+    public static String getDefaultMIME() {
+        return MIME_MAP.get("*");
+    }
+    
     static {
-        MIME_MAP.put("*","application/octet-stream");
+        MIME_MAP.put("*","application/octet-stream");//default
         
         MIME_MAP.put("ez","application/andrew-inset");
         MIME_MAP.put("aw","application/applixware");
@@ -841,34 +883,58 @@ public class MIMEUtil {
         MIME_MAP.put("tga","image/x-tga");
         MIME_MAP.put("xbm","image/x-xbitmap");
         MIME_MAP.put("xpm","image/x-xpixmap");
-        MIME_MAP.put("xwd","image/x-xwindowdump");？？？
-        MIME_MAP.put("eml@mime","message/rfc822");
-        MIME_MAP.put("igs@iges","model/iges");
-        MIME_MAP.put("msh@mesh@silo","model/mesh");
+        MIME_MAP.put("xwd","image/x-xwindowdump");
+        MIME_MAP.put("eml","message/rfc822");
+        MIME_MAP.put("mime","message/rfc822");
+        MIME_MAP.put("igs","model/iges");
+        MIME_MAP.put("iges","model/iges");
+        MIME_MAP.put("msh","model/mesh");
+        MIME_MAP.put("mesh","model/mesh");
+        MIME_MAP.put("silo","model/mesh");
         MIME_MAP.put("dae","model/vnd.collada+xml");
         MIME_MAP.put("dwf","model/vnd.dwf");
         MIME_MAP.put("gdl","model/vnd.gdl");
         MIME_MAP.put("gtw","model/vnd.gtw");
         MIME_MAP.put("mts","model/vnd.mts");
         MIME_MAP.put("vtu","model/vnd.vtu");
-        MIME_MAP.put("wrl@vrml","model/vrml");
-        MIME_MAP.put("x3db@x3dbz","model/x3d+binary");
-        MIME_MAP.put("x3dv@x3dvz","model/x3d+vrml");
-        MIME_MAP.put("x3d@x3dz","model/x3d+xml");
+        MIME_MAP.put("wrl","model/vrml");
+        MIME_MAP.put("vrml","model/vrml");
+        MIME_MAP.put("x3db","model/x3d+binary");
+        MIME_MAP.put("x3dbz","model/x3d+binary");
+        MIME_MAP.put("x3dv","model/x3d+vrml");
+        MIME_MAP.put("x3dvz","model/x3d+vrml");
+        MIME_MAP.put("x3d","model/x3d+xml");
+        MIME_MAP.put("x3dz","model/x3d+xml");
         MIME_MAP.put("appcache","text/cache-manifest");
-        MIME_MAP.put("ics@ifb","text/calendar");
+        MIME_MAP.put("ics","text/calendar");
+        MIME_MAP.put("ifb","text/calendar");
         MIME_MAP.put("css","text/css");
         MIME_MAP.put("csv","text/csv");
-        MIME_MAP.put("html@htm","text/html");
+        MIME_MAP.put("html","text/html");
+        MIME_MAP.put("htm","text/html");
         MIME_MAP.put("n3","text/n3");
-        MIME_MAP.put("txt@text@conf@def@list@log@in","text/plain");
+        MIME_MAP.put("txt","text/plain");
+        MIME_MAP.put("text","text/plain");
+        MIME_MAP.put("conf","text/plain");
+        MIME_MAP.put("def","text/plain");
+        MIME_MAP.put("list","text/plain");
+        MIME_MAP.put("log","text/plain");
+        MIME_MAP.put("in","text/plain");
         MIME_MAP.put("dsc","text/prs.lines.tag");
         MIME_MAP.put("rtx","text/richtext");
-        MIME_MAP.put("sgml@sgm","text/sgml");
+        MIME_MAP.put("sgml","text/sgml");
+        MIME_MAP.put("sgm","text/sgml");
         MIME_MAP.put("tsv","text/tab-separated-values");
-        MIME_MAP.put("t@tr@roff@man@me@ms","text/troff");
+        MIME_MAP.put("t","text/troff");
+        MIME_MAP.put("tr","text/troff");
+        MIME_MAP.put("roff","text/troff");
+        MIME_MAP.put("man","text/troff");
+        MIME_MAP.put("me","text/troff");
+        MIME_MAP.put("ms","text/troff");
         MIME_MAP.put("ttl","text/turtle");
-        MIME_MAP.put("uri@uris@urls","text/uri-list");
+        MIME_MAP.put("uri","text/uri-list");
+        MIME_MAP.put("uris","text/uri-list");
+        MIME_MAP.put("urls","text/uri-list");
         MIME_MAP.put("vcard","text/vcard");
         MIME_MAP.put("curl","text/vnd.curl");
         MIME_MAP.put("dcurl","text/vnd.curl.dcurl");
@@ -883,13 +949,24 @@ public class MIMEUtil {
         MIME_MAP.put("jad","text/vnd.sun.j2me.app-descriptor");
         MIME_MAP.put("wml","text/vnd.wap.wml");
         MIME_MAP.put("wmls","text/vnd.wap.wmlscript");
-        MIME_MAP.put("s@asm","text/x-asm");
-        MIME_MAP.put("c@cc@cxx@cpp@h@hh@dic","text/x-c");
-        MIME_MAP.put("f@for@f77@f90","text/x-fortran");
+        MIME_MAP.put("s","text/x-asm");
+        MIME_MAP.put("asm","text/x-asm");
+        MIME_MAP.put("c","text/x-c");
+        MIME_MAP.put("cc","text/x-c");
+        MIME_MAP.put("cxx","text/x-c");
+        MIME_MAP.put("cpp","text/x-c");
+        MIME_MAP.put("h","text/x-c");
+        MIME_MAP.put("hh","text/x-c");
+        MIME_MAP.put("dic","text/x-c");
+        MIME_MAP.put("f","text/x-fortran");
+        MIME_MAP.put("for","text/x-fortran");
+        MIME_MAP.put("f77","text/x-fortran");
+        MIME_MAP.put("f90","text/x-fortran");
         MIME_MAP.put("java","text/x-java-source");
         MIME_MAP.put("nfo","text/x-nfo");
         MIME_MAP.put("opml","text/x-opml");
-        MIME_MAP.put("p@pas","text/x-pascal");
+        MIME_MAP.put("p","text/x-pascal");
+        MIME_MAP.put("pas","text/x-pascal");
         MIME_MAP.put("etx","text/x-setext");
         MIME_MAP.put("sfv","text/x-sfv");
         MIME_MAP.put("uu","text/x-uuencode");
@@ -901,31 +978,50 @@ public class MIMEUtil {
         MIME_MAP.put("h263","video/h263");
         MIME_MAP.put("h264","video/h264");
         MIME_MAP.put("jpgv","video/jpeg");
-        MIME_MAP.put("jpm@jpgm","video/jpm");
-        MIME_MAP.put("mj2@mjp2","video/mj2");
-        MIME_MAP.put("mp4@mp4v@mpg4","video/mp4");
-        MIME_MAP.put("mpeg@mpg@mpe@m1v@m2v","video/mpeg");
+        MIME_MAP.put("jpm","video/jpm");
+        MIME_MAP.put("jpgm","video/jpm");
+        MIME_MAP.put("mj2","video/mj2");
+        MIME_MAP.put("mjp2","video/mj2");
+        MIME_MAP.put("mp4","video/mp4");
+        MIME_MAP.put("mp4v","video/mp4");
+        MIME_MAP.put("mpg4","video/mp4");
+        MIME_MAP.put("mpeg","video/mpeg");
+        MIME_MAP.put("mpg","video/mpeg");
+        MIME_MAP.put("mpe","video/mpeg");
+        MIME_MAP.put("m1v","video/mpeg");
+        MIME_MAP.put("m2v","video/mpeg");
         MIME_MAP.put("ogv","video/ogg");
-        MIME_MAP.put("qt@mov","video/quicktime");
-        MIME_MAP.put("uvh@uvvh","video/vnd.dece.hd");
-        MIME_MAP.put("uvm@uvvm","video/vnd.dece.mobile");
-        MIME_MAP.put("uvp@uvvp","video/vnd.dece.pd");
-        MIME_MAP.put("uvs@uvvs","video/vnd.dece.sd");
-        MIME_MAP.put("uvv@uvvv","video/vnd.dece.video");
+        MIME_MAP.put("qt","video/quicktime");
+        MIME_MAP.put("mov","video/quicktime");
+        MIME_MAP.put("uvh","video/vnd.dece.hd");
+        MIME_MAP.put("uvvh","video/vnd.dece.hd");
+        MIME_MAP.put("uvm","video/vnd.dece.mobile");
+        MIME_MAP.put("uvvm","video/vnd.dece.mobile");
+        MIME_MAP.put("uvp","video/vnd.dece.pd");
+        MIME_MAP.put("uvvp","video/vnd.dece.pd");
+        MIME_MAP.put("uvs","video/vnd.dece.sd");
+        MIME_MAP.put("uvvs","video/vnd.dece.sd");
+        MIME_MAP.put("uvv","video/vnd.dece.video");
+        MIME_MAP.put("uvvv","video/vnd.dece.video");
         MIME_MAP.put("dvb","video/vnd.dvb.file");
         MIME_MAP.put("fvt","video/vnd.fvt");
-        MIME_MAP.put("mxu@m4u","video/vnd.mpegurl");
+        MIME_MAP.put("mxu","video/vnd.mpegurl");
+        MIME_MAP.put("m4u","video/vnd.mpegurl");
         MIME_MAP.put("pyv","video/vnd.ms-playready.media.pyv");
-        MIME_MAP.put("uvu@uvvu","video/vnd.uvvu.mp4");
+        MIME_MAP.put("uvu","video/vnd.uvvu.mp4");
+        MIME_MAP.put("uvvu","video/vnd.uvvu.mp4");
         MIME_MAP.put("viv","video/vnd.vivo");
         MIME_MAP.put("webm","video/webm");
         MIME_MAP.put("f4v","video/x-f4v");
         MIME_MAP.put("fli","video/x-fli");
         MIME_MAP.put("flv","video/x-flv");
         MIME_MAP.put("m4v","video/x-m4v");
-        MIME_MAP.put("mkv@mk3d@mks","video/x-matroska");
+        MIME_MAP.put("mkv","video/x-matroska");
+        MIME_MAP.put("mk3d","video/x-matroska");
+        MIME_MAP.put("mks","video/x-matroska");
         MIME_MAP.put("mng","video/x-mng");
-        MIME_MAP.put("asf@asx","video/x-ms-asf");
+        MIME_MAP.put("asf","video/x-ms-asf");
+        MIME_MAP.put("asx","video/x-ms-asf");
         MIME_MAP.put("vob","video/x-ms-vob");
         MIME_MAP.put("wm","video/x-ms-wm");
         MIME_MAP.put("wmv","video/x-ms-wmv");
@@ -935,6 +1031,5 @@ public class MIMEUtil {
         MIME_MAP.put("movie","video/x-sgi-movie");
         MIME_MAP.put("smv","video/x-smv");
         MIME_MAP.put("ice","x-conference/x-cooltalk");
-
     }
 }
