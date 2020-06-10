@@ -9,6 +9,7 @@ import air.kanna.nanoHttpShare.mapping.FilterMapping;
 import air.kanna.nanoHttpShare.mapping.FilterMappingUtil;
 import air.kanna.nanoHttpShare.mapping.MappingFunction;
 import air.kanna.nanoHttpShare.util.StringTool;
+import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Method;
 import fi.iki.elonen.NanoHTTPD.Response;
@@ -72,13 +73,43 @@ public class FileShareFilterMapping implements FilterMapping {
         if(!isAccept(session)) {
             return null;
         }
+        
         String uri = getSubUri(session.getUri());
+        if(!checkURI(uri)) {
+            return ShareHttpService.newFixedLengthResponse(Status.FORBIDDEN, NanoHTTPD.MIME_HTML, "");
+        }
+        
         switch(uri) {
             case ICON_FILE: return FilterMappingUtil.getResourceResponse("air/kanna/nanoHttpShare/mapping/fileshare/data/HttpShareFileIcon.png");
             case ICON_FOLDER: return FilterMappingUtil.getResourceResponse("air/kanna/nanoHttpShare/mapping/fileshare/data/HttpShareFolderIcon.png");
             case ICON_DOWNLOAD: return FilterMappingUtil.getResourceResponse("air/kanna/nanoHttpShare/mapping/fileshare/data/HttpShareDownloadIcon.png");
             default: return getFilePathResponse(uri);
         }
+    }
+    
+    /**
+     * 检查URI，看看有没有什么非法URI
+     * 当前检查是有没有“.”和“..”的路径，防止越权
+     * @param uri
+     * @return
+     */
+    private boolean checkURI(String uri) {
+        if(StringTool.isAllSpacesString(uri)) {
+            return true;
+        }
+        String[] sepUri = uri.replaceAll("\\\\", "/").split("/");
+        for(String subName: sepUri) {
+            if(StringTool.isAllSpacesString(subName)) {
+                continue;
+            }
+            if(".".equals(subName)) {
+                return false;
+            }
+            if("..".equals(subName)) {
+                return false;
+            }
+        }
+        return true;
     }
     
     private Response getFilePathResponse(String path) {
