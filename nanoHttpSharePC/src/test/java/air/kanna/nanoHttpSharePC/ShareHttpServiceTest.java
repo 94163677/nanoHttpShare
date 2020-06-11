@@ -15,7 +15,7 @@ public class ShareHttpServiceTest{
             LoggerProvider.resetLoggerFactory(factory);
             
             ShareHttpService service = new ShareHttpService(8090);
-            FileShareFilterMapping fileShare = new FileShareFilterMapping(".");
+            FileShareFilterMapping fileShare = new FileShareFilterMapping(".", null);
             service.addFilterMapping(fileShare);
             service.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
         }catch(Exception e) {

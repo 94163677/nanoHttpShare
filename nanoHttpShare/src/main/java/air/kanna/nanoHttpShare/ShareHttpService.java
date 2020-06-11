@@ -61,6 +61,9 @@ public class ShareHttpService extends NanoHTTPD{
         if(mapping == null || mappingList.contains(mapping)) {
             return false;
         }
+        if(!checkFilterMapping(mapping)) {
+            return false;
+        }
         boolean result = mappingList.add(mapping);
         mappingListChange();
         return result;
@@ -75,6 +78,14 @@ public class ShareHttpService extends NanoHTTPD{
         return result;
     }
     
+    public String getFunctionNotFound() {
+        return rootMapping.getFunctionNotFound();
+    }
+
+    public void setFunctionNotFound(String functionNotFound) {
+        rootMapping.setFunctionNotFound(functionNotFound);
+    }
+    
     private void mappingListChange() {
         rootMapping.getFunctions().clear();
         for(FilterMapping mapping : mappingList) {
@@ -83,5 +94,28 @@ public class ShareHttpService extends NanoHTTPD{
                 rootMapping.getFunctions().add(function);
             }
         }
+    }
+    
+    private boolean checkFilterMapping(FilterMapping mapping) {
+        MappingFunction func = mapping.getFunction();
+        if(func == null) {
+            return false;
+        }
+        
+        for(FilterMapping filter : mappingList) {
+            if(filter.getFunction() == null) {
+                continue;
+            }
+            MappingFunction tempFunc = filter.getFunction();
+            if(tempFunc.getFunctionName().equalsIgnoreCase(func.getFunctionName())) {
+                logger.error("Same Function Name: " + func.getFunctionName());
+                return false;
+            }
+            if(tempFunc.getFunctionUri().equalsIgnoreCase(func.getFunctionUri())) {
+                logger.error("Same Function URI: " + func.getFunctionUri());
+                return false;
+            }
+        }
+        return true;
     }
 }

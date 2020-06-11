@@ -1,6 +1,8 @@
 package air.kanna.nanoHttpShare.mapping.fileshare;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import air.kanna.nanoHttpShare.ShareHttpService;
 import air.kanna.nanoHttpShare.logger.Logger;
@@ -16,28 +18,35 @@ import fi.iki.elonen.NanoHTTPD.Response;
 import fi.iki.elonen.NanoHTTPD.Response.Status;
 
 public class FileShareFilterMapping implements FilterMapping {
-    private static final String SHARE_URI = "fileShare";
-    private static final String DOWNLOAD_URI = "@orgDownload";
-    private static final MappingFunction FILE_SHARE = new MappingFunction("文件共享", SHARE_URI);
+    private static final String DEFAULT_URI = "fileShare";
     
+    private static final String DOWNLOAD_URI = "@orgDownload";
     private static final String ICON_FILE = "@file.png";
     private static final String ICON_FOLDER = "@folder.png";
     private static final String ICON_DOWNLOAD = "@download.png";
+    
+    private static final MappingFunction DEFAULT_FUNCTION = new MappingFunction("文件共享", DEFAULT_URI);
     
     private final Logger logger = LoggerProvider.getLogger(ShareHttpService.class);
     
     private File basePath;
     private String basePathStr;
+    private MappingFunction function = DEFAULT_FUNCTION;
     
-    public FileShareFilterMapping(String path) {
+    private String listTitle = "文件列表";
+    private String homeString = "根目录";
+    
+    public FileShareFilterMapping(String path, MappingFunction function) {
         if(StringTool.isAllSpacesString(path)) {
             throw new NullPointerException("Base path is null");
         }
         initBasePath(new File(path));
+        initFunction(function);
     }
     
-    public FileShareFilterMapping(File path) {
+    public FileShareFilterMapping(File path, MappingFunction function) {
         initBasePath(path);
+        initFunction(function);
     }
     
     private void initBasePath(File path) {
@@ -51,9 +60,20 @@ public class FileShareFilterMapping implements FilterMapping {
         this.basePathStr = path.getAbsolutePath().replaceAll("\\\\", "/");
     }
     
+    private void initFunction(MappingFunction function) {
+        if(function == null) {
+            return;
+        }
+        try {
+            this.function = new MappingFunction(function.getFunctionName(), function.getFunctionUri());
+        }catch(Exception e) {
+            
+        }
+    }
+    
     @Override
     public MappingFunction getFunction() {
-        return FILE_SHARE;
+        return new MappingFunction(function.getFunctionName(), function.getFunctionUri());
     }
 
     @Override
@@ -62,7 +82,7 @@ public class FileShareFilterMapping implements FilterMapping {
             return false;
         }
         String uri = session.getUri();
-        if(uri.startsWith("/" + SHARE_URI)) {
+        if(uri.startsWith("/" + function.getFunctionUri())) {
             return true;
         }
         return false;
@@ -188,26 +208,12 @@ public class FileShareFilterMapping implements FilterMapping {
                 "        </style>\r\n" + 
                 "    </head>\r\n" + 
                 "    <body>\r\n" + 
-                "        <center><h1>文件列表</h1></center>\r\n" + 
+                "        <center><h1>" + listTitle + "</h1></center>\r\n" + 
                 "        <center><table class=\"tableMain\">\r\n");
         
         if(parent != null) {
-            String parentStr = getFileUri(parent)[0];
-            if(parentStr != null) {
-                count++;
-                builder.append(
-                        "            <tr>\r\n" + 
-                        "                <td class=\"tableIcon\"><img class=\"iconStyle\" src=\"/")
-                    .append(SHARE_URI).append('/').append(ICON_FOLDER)
-                    .append("\"></td>\r\n");
-                builder.append(
-                        "                <td class=\"fileUrl\"><a href=\"")
-                    .append(parentStr).append("\">上一级</a></td>\r\n");
-                builder.append(
-                        "                <td class=\"tableIcon\"></td>\r\n" +
-                        "            </tr>\r\n");
-                
-            }
+            count++;
+            builder.append(getParentHtml(path));
         }
         
         File[] list = path.listFiles();
@@ -227,7 +233,7 @@ public class FileShareFilterMapping implements FilterMapping {
             builder.append("            <tr class=\"").append(count % 2 == 1 ? "sepHighLight" : "").append("\">\r\n");
             builder.append(
                     "                <td class=\"tableIcon\"><img class=\"iconStyle\" src=\"/")
-                .append(SHARE_URI).append('/').append(item.isFile() ? ICON_FILE : ICON_FOLDER)
+                .append(function.getFunctionUri()).append('/').append(item.isFile() ? ICON_FILE : ICON_FOLDER)
                 .append("\"></td>\r\n");
             builder.append(
                     "                <td class=\"fileUrl\"><a href=\"")
@@ -238,7 +244,7 @@ public class FileShareFilterMapping implements FilterMapping {
                         "                <td class=\"tableIcon\">")
                     .append("<a href=\"").append(itemPath[1]).append("\">")
                     .append("<img class=\"iconStyle\" src=\"/")
-                    .append(SHARE_URI).append('/').append(ICON_DOWNLOAD)
+                    .append(function.getFunctionUri()).append('/').append(ICON_DOWNLOAD)
                     .append("\"></a></td>\r\n");
             }else {
                 builder.append(
@@ -254,6 +260,54 @@ public class FileShareFilterMapping implements FilterMapping {
                 "</html>\r\n");
         
         return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, builder.toString());
+    }
+    
+    private String getParentHtml(File path) {
+        List<File> parents = new ArrayList<>();
+        File temp = path;
+        StringBuilder builder = new StringBuilder();
+        
+        for(;!temp.getAbsolutePath().equals(basePath.getAbsolutePath()); temp = temp.getParentFile()) {
+            parents.add(temp);
+        }
+        
+        if(parents.size() <= 0) {
+            builder.append("<tr><td class=\"tableIcon\"><img class=\"iconStyle\" src=\"/")
+                .append(function.getFunctionUri()).append('/').append(ICON_FOLDER).append("\"></td>");
+            builder.append("<td class=\"fileUrl\"><td><td class=\"tableIcon\"></td></tr>");
+        }else {
+            parents.add(basePath);
+            
+            builder.append(
+                    "            <tr>\r\n" + 
+                    "                <td class=\"tableIcon\"><img class=\"iconStyle\" src=\"/")
+                .append(function.getFunctionUri()).append('/').append(ICON_FOLDER).append("\"></td>\r\n");
+            builder.append(
+                    "                <td class=\"fileUrl\">");
+            for(int i=parents.size() - 1; i>=0; i--) {
+                File file = parents.get(i);
+                String parentStr = getFileUri(file)[0];
+                String name = file.getName();
+                
+                //根目录显示专有名称
+                if(i == parents.size() - 1) {
+                    name = homeString;
+                }
+                //最后的目录就是当前目录，无需超链接
+                if(parentStr == null || i == 0) {
+                    builder.append(name);
+                }else {
+                    builder.append("<a href=\"").append(parentStr).append("\">").append(name).append("</a>");
+                }
+                builder.append(" / ");
+            }
+            
+            builder.append("</td>\r\n");
+            builder.append(
+                    "                <td class=\"tableIcon\"></td>\r\n" +
+                    "            </tr>\r\n");
+        }
+        return builder.toString();
     }
     
     private String[] getFileUri(File path) {
@@ -272,20 +326,20 @@ public class FileShareFilterMapping implements FilterMapping {
         }
         
         if(pathStr.charAt(0) == '/') {
-            result[0] = '/' + SHARE_URI + pathStr;
-            result[1] = '/' + SHARE_URI + '/' + DOWNLOAD_URI + pathStr;
+            result[0] = '/' + function.getFunctionUri() + pathStr;
+            result[1] = '/' + function.getFunctionUri() + '/' + DOWNLOAD_URI + pathStr;
         }else {
-            result[0] = '/' + SHARE_URI + '/' + pathStr;
-            result[1] = '/' + SHARE_URI + '/' + DOWNLOAD_URI + '/' + pathStr;
+            result[0] = '/' + function.getFunctionUri() + '/' + pathStr;
+            result[1] = '/' + function.getFunctionUri() + '/' + DOWNLOAD_URI + '/' + pathStr;
         }
         return result;
     }
     
     private String getSubUri(String uri) {
-        if(uri == null || uri.length() < (SHARE_URI.length() + 1)) {
+        if(uri == null || uri.length() < (function.getFunctionUri().length() + 1)) {
             return null;
         }
-        uri = uri.substring(SHARE_URI.length() + 1);
+        uri = uri.substring(function.getFunctionUri().length() + 1);
         if(uri.length() <= 0) {
             return "";
         }
@@ -293,5 +347,21 @@ public class FileShareFilterMapping implements FilterMapping {
             return uri.substring(1);
         }
         return uri;
+    }
+
+    public String getListTitle() {
+        return listTitle;
+    }
+
+    public String getHomeString() {
+        return homeString;
+    }
+
+    public void setListTitle(String listTitle) {
+        this.listTitle = listTitle;
+    }
+
+    public void setHomeString(String homeString) {
+        this.homeString = homeString;
     }
 }

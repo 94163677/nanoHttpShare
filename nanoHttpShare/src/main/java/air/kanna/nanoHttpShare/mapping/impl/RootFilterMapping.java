@@ -22,6 +22,8 @@ public class RootFilterMapping implements FilterMapping {
     
     private List<MappingFunction> functions = new ArrayList<>();
 
+    private String functionNotFound = "暂无功能可选";
+    
     @Override
     public boolean isAccept(IHTTPSession session) {
         if(session.getMethod() != Method.GET) {
@@ -59,7 +61,7 @@ public class RootFilterMapping implements FilterMapping {
             .append("font-size: large;\n}\n</style>\n</head><body><center><h1>NanoHttpShare</h1></center>\n");
         
         if(functions.size() <= 0) {
-            builder.append("<center><h1>暂无功能可选</h1></center>\n");
+            builder.append("<center><h1>").append(functionNotFound).append("</h1></center>\n");
         }else {
             for(MappingFunction function : functions) {
                 builder.append("<center><input type=\"button\" value=\"").append(function.getFunctionName())
@@ -82,5 +84,13 @@ public class RootFilterMapping implements FilterMapping {
 
     public void setFunctions(List<MappingFunction> functions) {
         this.functions = functions;
+    }
+
+    public String getFunctionNotFound() {
+        return functionNotFound;
+    }
+
+    public void setFunctionNotFound(String functionNotFound) {
+        this.functionNotFound = functionNotFound;
     }
 }
