@@ -41,6 +41,7 @@ import air.kanna.nanoHttpShare.logger.LoggerFactory;
 import air.kanna.nanoHttpShare.logger.LoggerProvider;
 import air.kanna.nanoHttpShare.mapping.MappingFunction;
 import air.kanna.nanoHttpShare.mapping.fileshare.FileShareFilterMapping;
+import air.kanna.nanoHttpShare.mapping.texttrans.TextTransferFilterMapping;
 import air.kanna.nanoHttpShare.util.StringTool;
 import air.kanna.nanoHttpSharePC.config.NanoSharePCConfig;
 import air.kanna.nanoHttpSharePC.config.NanoSharePCConfigService;
@@ -285,6 +286,10 @@ public class ShareStartUp {
             FileShareFilterMapping mapping = new FileShareFilterMapping(file, function);
             service.clearFilterMapping();
             service.addFilterMapping(mapping);
+            
+            function = new MappingFunction("文字传输", UUID.randomUUID().toString().replaceAll("-", ""));
+            TextTransferFilterMapping transfer = new TextTransferFilterMapping(function);
+            service.addFilterMapping(transfer);
         }catch(Exception e) {
             logger.error("", e);
             JOptionPane.showMessageDialog(frmHttp, "更新共享的目录错误：" + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
