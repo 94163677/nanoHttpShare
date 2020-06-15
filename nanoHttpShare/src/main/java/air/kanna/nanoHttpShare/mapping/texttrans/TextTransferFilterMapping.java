@@ -202,7 +202,8 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "        <div class=\"messageEdit\">\r\n" + 
                 "            <table class=\"tableMain\">\r\n" + 
                 "                <tr>\r\n" + 
-                "                    <td><textarea id=\"messageText\" name=\"logText\" type=\"text\" class=\"messageArea\"></textarea></td>\r\n" + 
+                "                    <td><textarea id=\"messageText\" name=\"logText\" type=\"text\" class=\"messageArea\"></textarea></td>\r\n" +
+                "                    <td class=\"tableIcon\"><input id=\"flushBtn\" type=\"button\" value=\" 刷新 \" class=\"tableIcon\" style=\"height: 54px;\"></td>\r\n" +
                 "                    <td class=\"tableIcon\"><input id=\"sendBtn\" type=\"button\" value=\" 发送 \" class=\"tableIcon\" style=\"height: 54px;\"></td>\r\n" + 
                 "                </tr>\r\n" + 
                 "            </table>\r\n" + 
@@ -218,6 +219,10 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "                    reloadMessage();\r\n" + 
                 "                }\r\n" + 
                 "            );\r\n" + 
+                "        });\r\n" + 
+                "\r\n" + 
+                "        $(\"#flushBtn\").click(function(){\r\n" + 
+                "            reloadMessage();\r\n" + 
                 "        });\r\n" + 
                 "\r\n" + 
                 "        function reloadMessage(){\r\n" + 
