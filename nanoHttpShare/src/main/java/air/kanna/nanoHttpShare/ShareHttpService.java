@@ -57,7 +57,7 @@ public class ShareHttpService extends NanoHTTPD{
         }
     }
     
-    public boolean addFilterMapping(FilterMapping mapping) {
+    public synchronized boolean addFilterMapping(FilterMapping mapping) {
         if(mapping == null || mappingList.contains(mapping)) {
             return false;
         }
@@ -69,13 +69,18 @@ public class ShareHttpService extends NanoHTTPD{
         return result;
     }
     
-    public boolean removeFilterMapping(FilterMapping mapping) {
+    public synchronized boolean removeFilterMapping(FilterMapping mapping) {
         if(mapping == null || !mappingList.contains(mapping)) {
             return false;
         }
         boolean result = mappingList.remove(mapping);
         mappingListChange();
         return result;
+    }
+    
+    public synchronized void clearFilterMapping() {
+        rootMapping.getFunctions().clear();
+        mappingList.clear();
     }
     
     public String getFunctionNotFound() {
