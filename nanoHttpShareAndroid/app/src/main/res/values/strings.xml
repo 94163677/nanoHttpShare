@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">HTTP分享工具</string>
+    <string name="author_name">Create by Hh7</string>
+    <string name="version">V1.0.0</string>
+
+    <string name="sys_copy_finish">已复制到剪切板</string>
+    <string name="sys_exit_app_msg">再按一次退出程序</string>
+</resources>
