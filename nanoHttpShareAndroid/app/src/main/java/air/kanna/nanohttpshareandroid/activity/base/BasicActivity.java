@@ -12,14 +12,16 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import air.kanna.nanoHttpShare.logger.LoggerProvider;
 import air.kanna.nanohttpshareandroid.R;
+import air.kanna.nanohttpshareandroid.util.AndroidLogFactory;
 
 /**
  * Created on 2020-04-14.
  */
 
 public class BasicActivity extends AppCompatActivity {
-    protected static final int REQ_PERMISSION_CAMERA = 51629;
+    protected static final int REQ_PERMISSION_STORAGE = 61531;
 
     protected boolean canBeBack = true;
     protected long prevTime = 0;
@@ -41,6 +43,13 @@ public class BasicActivity extends AppCompatActivity {
         ActivityManager.addActivity(this);
         actionBar = getSupportActionBar();
         current = this;
+
+        //初始化日志
+        try{
+            LoggerProvider.getLogger("TEST");
+        }catch (NullPointerException e) {
+            LoggerProvider.resetLoggerFactory(new AndroidLogFactory());
+        }
     }
 
     @Override
