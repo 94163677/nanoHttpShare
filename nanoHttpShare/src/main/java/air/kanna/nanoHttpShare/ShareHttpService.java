@@ -6,6 +6,7 @@ import java.util.List;
 import air.kanna.nanoHttpShare.logger.Logger;
 import air.kanna.nanoHttpShare.logger.LoggerProvider;
 import air.kanna.nanoHttpShare.mapping.FilterMapping;
+import air.kanna.nanoHttpShare.mapping.FilterMappingUtil;
 import air.kanna.nanoHttpShare.mapping.MappingFunction;
 import air.kanna.nanoHttpShare.mapping.impl.RootFilterMapping;
 import fi.iki.elonen.NanoHTTPD;
@@ -32,7 +33,7 @@ public class ShareHttpService extends NanoHTTPD{
     @Override
     public Response serve(IHTTPSession session){
         try {
-            logger.info(session.getUri());
+            logger.info(FilterMappingUtil.getRequestIP(session) + " - " + session.getUri());
             
             Response response = null;
             if(rootMapping.isAccept(session)) {
@@ -57,7 +58,7 @@ public class ShareHttpService extends NanoHTTPD{
         }
     }
     
-    public boolean addFilterMapping(FilterMapping mapping) {
+    public synchronized boolean addFilterMapping(FilterMapping mapping) {
         if(mapping == null || mappingList.contains(mapping)) {
             return false;
         }
@@ -69,13 +70,18 @@ public class ShareHttpService extends NanoHTTPD{
         return result;
     }
     
-    public boolean removeFilterMapping(FilterMapping mapping) {
+    public synchronized boolean removeFilterMapping(FilterMapping mapping) {
         if(mapping == null || !mappingList.contains(mapping)) {
             return false;
         }
         boolean result = mappingList.remove(mapping);
         mappingListChange();
         return result;
+    }
+    
+    public synchronized void clearFilterMapping() {
+        rootMapping.getFunctions().clear();
+        mappingList.clear();
     }
     
     public String getFunctionNotFound() {
