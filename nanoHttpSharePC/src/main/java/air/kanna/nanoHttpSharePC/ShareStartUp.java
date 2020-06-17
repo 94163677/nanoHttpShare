@@ -255,7 +255,9 @@ public class ShareStartUp {
         if(service.isAlive()) {
             return;
         }
-        resetShareFile();
+        if(!resetShareFile()) {
+            return;
+        }
         try {
             service.start(NanoHTTPD.SOCKET_READ_TIMEOUT);
             startStopBtn.setText("停止共享");
@@ -282,7 +284,11 @@ public class ShareStartUp {
         }
         try {
             File file = new File(path);
-            MappingFunction function = new MappingFunction(file.getName(), UUID.randomUUID().toString().replaceAll("-", ""));
+            String name = file.getName();
+            if("".equals(name)) {
+                name = file.getPath();
+            }
+            MappingFunction function = new MappingFunction(name, UUID.randomUUID().toString().replaceAll("-", ""));
             FileShareFilterMapping mapping = new FileShareFilterMapping(file, function);
             service.clearFilterMapping();
             service.addFilterMapping(mapping);
