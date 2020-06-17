@@ -35,6 +35,26 @@ public class StringTool {
 				|| ch == 0xA0; //不知道什么格式的空格
 	}
 	
+	public static boolean equals(String strA, String strB) {
+	    if(strA == null && strB == null) {
+	        return true;
+	    }
+	    if(strA != null && strB != null) {
+	        return strA.equals(strB);
+	    }
+	    return false;
+	}
+	
+	public static boolean equalsIgnoreCase(String strA, String strB) {
+	    if(strA == null && strB == null) {
+            return true;
+        }
+        if(strA != null && strB != null) {
+            return strA.equalsIgnoreCase(strB);
+        }
+        return false;
+	}
+	
 	public static String stringTrimEx(String str){
 		if(isNullString(str)){
 			return str;

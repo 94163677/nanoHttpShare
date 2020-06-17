@@ -1,7 +1,10 @@
 package air.kanna.nanoHttpShare.mapping.texttrans;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +35,7 @@ public class TextTransferFilterMapping implements FilterMapping {
     
     private final Logger logger = LoggerProvider.getLogger(TextTransferFilterMapping.class);
     
-    private List<String> textList;
+    private List<TransferMessage> textList;
     private MappingFunction function = DEFAULT_FUNCTION;
     private String indexUri;
     private String scriptUri;
@@ -85,19 +88,20 @@ public class TextTransferFilterMapping implements FilterMapping {
             return null;
         }
         String uri = session.getUri();
+        String ip = FilterMappingUtil.getRequestIP(session);
         
         if(uri.equals(scriptUri)) {
             return FilterMappingUtil.getResourceResponse("air/kanna/nanoHttpShare/mapping/texttrans/data/jquery-3.5.1.min.js");
         }
         
         if(uri.equals(messageUri)) {
-            return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, getMessageList());
+            return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, getMessageList(ip));
         }
         if(uri.equals(indexUri)) {
             return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, getIndexString());
         }
         if(uri.equals(submitUri)) {
-            return addMessage(session);
+            return addMessage(session, ip);
         }
         
         return null;
@@ -118,14 +122,19 @@ public class TextTransferFilterMapping implements FilterMapping {
         messageUri = indexUri + '/' + MESSAGE_URI;
     }
     
-    private Response addMessage(IHTTPSession session) {
+    private Response addMessage(IHTTPSession session, String ip) {
         Map<String, String> params = new HashMap<String, String>();
         try {
             session.parseBody(params);
             String message = session.getParms().get(MESSAGE_PARAM);
             
             if(!StringTool.isAllSpacesString(message)) {
-                textList.add(message);
+                TransferMessage msg = new TransferMessage();
+                
+                msg.setSendIP(ip);
+                msg.setSendDate(new Date());
+                msg.setMessage(message);
+                textList.add(msg);
             }
             
             return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, "");
@@ -135,13 +144,21 @@ public class TextTransferFilterMapping implements FilterMapping {
         }
     }
     
-    private String getMessageList() {
+    private String getMessageList(String ip) {
         StringBuilder sb = new StringBuilder();
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        
         sb.append('[');
-        for(String text : textList) {
+        for(TransferMessage msg : textList) {
+            String text = msg.getMessage();
+            String dateStr = format.format(msg.getSendDate());
+            
             text = text.replaceAll("\\\\", "\\\\\\\\");
             text = text.replaceAll("\\\"", "\\\\\"");
-            sb.append('\"').append(text).append('\"').append(',');
+            
+            sb.append('{').append("\"date\":\"").append(dateStr)
+                .append("\",\"isSender\":").append(StringTool.equals(ip, msg.getSendIP()))
+                .append(",\"text\":\"").append(text).append("\"},");
         }
         if(textList.size() > 0) {
             sb.deleteCharAt(sb.length() - 1);
@@ -159,61 +176,153 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "    <head>\r\n" + 
                 "        <meta charset=\"UTF-8\">\r\n" + 
                 "        <style type=\"text/css\">\r\n" + 
-                "            .tableMain{\r\n" + 
-                "                table-layout:fixed;\r\n" + 
-                "                width: 98%;\r\n" + 
-                "            }\r\n" + 
-                "            .tableIcon{\r\n" + 
-                "                width: 120px;\r\n" + 
-                "            }\r\n" + 
-                "            .messageDiv{\r\n" + 
-                "                width: 100%;\r\n" + 
-                "                height: 600px;\r\n" + 
-                "                background-color: #eee;\r\n" + 
-                "                overflow: auto;\r\n" + 
-                "            }\r\n" + 
-                "            .messageBox{\r\n" + 
-                "                width: 99%;\r\n" + 
-                "                height: 56px;\r\n" + 
-                "            }\r\n" + 
-                "            .messageEdit{\r\n" + 
-                "                width: 98%;\r\n" + 
-                "                height: 60px;\r\n" + 
-                "                background-color: #ccc;\r\n" + 
-                "                border: 1px solid black;\r\n" + 
-                "                white-space: nowrap;\r\n" + 
+                "            html,body{\r\n" + 
+                "                height: 100%;\r\n" + 
+                "                margin: 0px;\r\n" + 
+                "                padding: 0px;\r\n" + 
                 "                overflow: hidden;\r\n" + 
-                "                position: absolute;\r\n" + 
-                "                bottom: 5px;\r\n" + 
                 "            }\r\n" + 
-                "            .messageArea{\r\n" + 
+                "            body{\r\n" + 
+                "                display: block;\r\n" + 
+                "            }\r\n" + 
+                "            div{\r\n" + 
+                "                display: block;\r\n" + 
+                "            }\r\n" + 
+                "            footer {\r\n" + 
+                "                position: fixed;\r\n" + 
                 "                width: 100%;\r\n" + 
-                "                height: 54px;\r\n" + 
+                "                height: 80px;\r\n" + 
+                "                min-height: 80px;\r\n" + 
+                "                border-top: solid 1px #ddd;\r\n" + 
+                "                left: 0px;\r\n" + 
+                "                bottom: 0px;\r\n" + 
+                "                overflow: hidden;\r\n" + 
+                "                background-color: #F5F5F5;\r\n" + 
+                "            }\r\n" + 
+                "            textarea{\r\n" + 
+                "                box-sizing: border-box;\r\n" + 
+                "                font: inherit;\r\n" + 
+                "                resize: none;\r\n" + 
+                "                margin: 0;\r\n" + 
+                "                width: 100%;\r\n" + 
+                "                height: 100%;\r\n" + 
+                "                border: none;\r\n" + 
+                "                border-bottom: 1.5px solid #ddd;\r\n" + 
+                "                padding: 10px;\r\n" + 
+                "            }\r\n" + 
+                "            ul{\r\n" + 
+                "                padding: 10px;\r\n" + 
+                "                margin: 0;\r\n" + 
+                "            }\r\n" + 
+                "            ul li{\r\n" + 
+                "                list-style-type: none;\r\n" + 
+                "                margin-bottom: 10px;\r\n" + 
+                "            }\r\n" + 
+                "            .message-box{\r\n" + 
+                "                background: #eee;\r\n" + 
+                "                height: 100%;\r\n" + 
+                "                padding: 5px 5px 80px;\r\n" + 
+                "                overflow: auto;\r\n" + 
+                "                box-sizing: border-box;\r\n" + 
+                "            }\r\n" + 
+                "            .footer-text {\r\n" + 
+                "                height: 100%;\r\n" + 
+                "                padding-right: 100px;\r\n" + 
+                "                padding-left: 50px;\r\n" + 
+                "            }\r\n" + 
+                "            .footer-rbutton {\r\n" + 
+                "                position: absolute;\r\n" + 
+                "                margin-left: 3px;\r\n" + 
+                "                width: 100px;\r\n" + 
+                "                height: 80px;\r\n" + 
+                "                right: 0px;\r\n" + 
+                "                bottom: 0px;\r\n" + 
+                "                text-align: center;\r\n" + 
+                "                vertical-align: middle;\r\n" + 
+                "            }\r\n" + 
+                "            .footer-lbutton {\r\n" + 
+                "                position: absolute;\r\n" + 
+                "                margin-right: 3px;\r\n" + 
+                "                width: 50px;\r\n" + 
+                "                height: 80px;\r\n" + 
+                "                left: 0px;\r\n" + 
+                "                bottom: 0px;\r\n" + 
+                "                text-align: center;\r\n" + 
+                "                vertical-align: middle;\r\n" + 
+                "            }\r\n" + 
+                "            .send_button{\r\n" + 
+                "                width: 100%;\r\n" + 
+                "                height: 100%;\r\n" + 
+                "                margin: 0;\r\n" + 
+                "                padding: 0;\r\n" + 
+                "            }\r\n" + 
+                "            .chart_self{\r\n" + 
+                "                text-align: right;\r\n" + 
+                "            }\r\n" + 
+                "            .chart_text, .chart_text_self{\r\n" + 
+                "                word-break: break-all;\r\n" + 
+                "                padding: 10px 15px;\r\n" + 
+                "                position: relative;\r\n" + 
+                "                background-color: white;\r\n" + 
+                "                display: inline-block;\r\n" + 
+                "            }\r\n" + 
+                "            .chart_text_self{\r\n" + 
+                "                background-color: #5FD05E;\r\n" + 
                 "            }\r\n" + 
                 "        </style>\r\n" + 
                 "        <script src=\"" + scriptUri + "\" type=\"text/javascript\"></script>\r\n" + 
                 "    </head>\r\n" + 
                 "    <body>" +
-                "        <div id=\"logs\" class=\"messageDiv\">\r\n" + 
-                "                <textarea type=\"text\" class=\"messageBox\">DDDDDDDDDDDD</textarea>\r\n" + 
-                "                <textarea type=\"text\" class=\"messageBox\">DDDDDDDDDDDD</textarea>\r\n" + 
-                "                <textarea type=\"text\" class=\"messageBox\">DDDDDDDDDDDD</textarea>\r\n" + 
+                "        <div class=\"message-box\">\r\n" + 
+                "            <ul id=\"msg_list\">\r\n" + 
+                "                <li>\r\n" + 
+                "                    <div class=\"chart_text\">你好啊！</div>\r\n" + 
+                "                </li>\r\n" + 
+                "                <li class=\"chart_self\">\r\n" + 
+                "                    <div class=\"chart_text_self\">你好啊！</div>\r\n" + 
+                "                </li>\r\n" + 
+                "                <li>\r\n" + 
+                "                    <div class=\"chart_text\">你好啊！</div>\r\n" + 
+                "                </li>\r\n" + 
+                "                <li class=\"chart_self\">\r\n" + 
+                "                    <div class=\"chart_text_self\">你好啊！</div>\r\n" + 
+                "                </li>\r\n" + 
+                "                <li>\r\n" + 
+                "                    <div class=\"chart_text\">你好啊！</div>\r\n" + 
+                "                </li>\r\n" + 
+                "                <li class=\"chart_self\">\r\n" + 
+                "                    <div class=\"chart_text_self\">你好啊！</div>\r\n" + 
+                "                </li>\r\n" + 
+                "                <li>\r\n" + 
+                "                    <div class=\"chart_text\">你好啊！</div>\r\n" + 
+                "                </li>\r\n" + 
+                "                <li class=\"chart_self\">\r\n" + 
+                "                    <div class=\"chart_text_self\">你好啊！</div>\r\n" + 
+                "                </li>\r\n" + 
+                "            </ul>\r\n" + 
                 "        </div>\r\n" + 
-                "        <div class=\"messageEdit\">\r\n" + 
-                "            <table class=\"tableMain\">\r\n" + 
-                "                <tr>\r\n" + 
-                "                    <td><textarea id=\"messageText\" name=\"logText\" type=\"text\" class=\"messageArea\"></textarea></td>\r\n" +
-                "                    <td class=\"tableIcon\"><input id=\"flushBtn\" type=\"button\" value=\" 刷新 \" class=\"tableIcon\" style=\"height: 54px;\"></td>\r\n" +
-                "                    <td class=\"tableIcon\"><input id=\"sendBtn\" type=\"button\" value=\" 发送 \" class=\"tableIcon\" style=\"height: 54px;\"></td>\r\n" + 
-                "                </tr>\r\n" + 
-                "            </table>\r\n" + 
-                "        </div>\r\n" + 
+                "        <!-- 底部 -->\r\n" + 
+                "        <footer>\r\n" + 
+                "            <div class=\"footer-lbutton\">\r\n" + 
+                "                <button id=\"flushBtn\" class=\"send_button\">刷新</button>\r\n" + 
+                "            </div>\r\n" + 
+                "            <div class=\"footer-text\">\r\n" + 
+                "                <textarea id=\"messageText\" type=\"text\" class=\"input-text\"></textarea>\r\n" + 
+                "            </div>\r\n" + 
+                "            <div class=\"footer-rbutton\">\r\n" + 
+                "                <button id=\"sendBtn\" class=\"send_button\">发送</button>\r\n" + 
+                "            </div>\r\n" + 
+                "        </footer>\r\n" + 
                 "    </body>\r\n" + 
                 "    <script type=\"text/javascript\">\r\n" + 
                 "        $(\"#sendBtn\").click(function(){\r\n" + 
+                "            var message = $('#messageText').val();\r\n" + 
+                "            if(message == undefined || message == null || message == ''){\r\n" + 
+                "                return;\r\n" + 
+                "            }\r\n" + 
                 "            $.post(\r\n" + 
                 "                \"" + submitUri + "\", \r\n" + 
-                "                {" + MESSAGE_PARAM + ": $('#messageText').val()},\r\n" + 
+                "                {" + MESSAGE_PARAM + ": message},\r\n" + 
                 "                function(data, textStatus){\r\n" + 
                 "                    $('#messageText').val('');\r\n" + 
                 "                    reloadMessage();\r\n" + 
@@ -226,17 +335,29 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "        });\r\n" + 
                 "\r\n" + 
                 "        function reloadMessage(){\r\n" + 
-                "            $.get(\"" + messageUri + "\", function(data){\r\n" + 
+                "            $.get(\"" + messageUri + "\", function(data){" + 
                 "                var messageList = JSON.parse(data);\r\n" + 
                 "                var htmlStr = '';\r\n" + 
+                "\r\n" + 
                 "                for(var idx=0; idx<messageList.length; idx++){\r\n" + 
-                "                    htmlStr += \"<textarea id=\\\"textAt\" + idx + \"\\\" type=\\\"text\\\" class=\\\"messageBox\\\"></textarea>\";\r\n" + 
+                "                    htmlStr += \"<li\";\r\n" + 
+                "                    if(messageList[idx].isSender){\r\n" + 
+                "                        htmlStr += \" class=\\\"chart_self\\\"\";\r\n" + 
+                "                    }\r\n" + 
+                "                    htmlStr += \"><div id=\\\"textAt\" + idx + \"\\\" class=\\\"\";\r\n" + 
+                "                    if(messageList[idx].isSender){\r\n" + 
+                "                        htmlStr += \"chart_text_self\";\r\n" + 
+                "                    }else{\r\n" + 
+                "                        htmlStr += \"chart_text\";\r\n" + 
+                "                    }\r\n" + 
+                "                    htmlStr += \"\\\"></div></li>\";\r\n" + 
                 "                }\r\n" + 
-                "                $('#logs').html(htmlStr);\r\n" + 
+                "                $('#msg_list').html(htmlStr);\r\n" + 
+                "\r\n" + 
                 "                for(var idx=0; idx<messageList.length; idx++){\r\n" + 
-                "                    $('#textAt' + idx).val(messageList[idx]);\r\n" + 
-                "                }\r\n" + 
-                "            });\r\n" +
+                "                    $('#textAt' + idx).text(messageList[idx].text);\r\n" + 
+                "                }\r\n" +
+                "            });\r\n" + 
                 "        }\r\n" + 
                 "\r\n" + 
                 "        $(function(){\r\n" + 
