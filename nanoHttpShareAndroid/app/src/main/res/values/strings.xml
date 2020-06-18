@@ -1,23 +1,30 @@
 <resources>
     <string name="app_name">HTTP分享工具</string>
     <string name="author_name">Create by Hh7</string>
-    <string name="version">V1.0.0</string>
+    <string name="version">V1.0.1</string>
 
     <string name="ip_text">IP地址：</string>
     <string name="port_text">端口号：</string>
 
     <string name="start_service_btn">开始共享</string>
     <string name="stop_service_btn">停止共享</string>
+    <string name="open_url_btn">打开连接</string>
     <string name="retry_btn">重新检查</string>
 
     <string name="sys_ok_button">确定</string>
     <string name="sys_cancel_button">取消</string>
     <string name="sys_yes_button">是</string>
     <string name="sys_no_button">否</string>
+    <string name="sys_send_button">发送</string>
+    <string name="sys_flush_button">刷新</string>
     <string name="sys_infor_title">提示</string>
     <string name="sys_warning_title">警告</string>
     <string name="sys_error_title">错误</string>
     <string name="sys_message_title">文字传输</string>
+    <string name="sys_file_list_title">文件列表</string>
+    <string name="sys_root_title">根目录</string>
+    <string name="sys_internal_title">内部存储</string>
+    <string name="sys_external_title">外部存储</string>
 
     <string name="sys_no_network">没有网络</string>
 

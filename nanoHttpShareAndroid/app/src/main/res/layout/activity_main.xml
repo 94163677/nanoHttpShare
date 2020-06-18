@@ -50,7 +50,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:layout_below="@+id/linearLayout"
         android:layout_centerHorizontal="true"
         android:layout_margin="5dp"
@@ -60,7 +60,7 @@
         <Button
             android:id="@+id/start_stop_btn"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="50"
             android:enabled="false"
             android:text="@string/start_service_btn" />
@@ -68,10 +68,18 @@
         <Button
             android:id="@+id/retry_btn"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="50"
             android:enabled="false"
             android:text="@string/retry_btn" />
+        <Button
+            android:id="@+id/open_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="50"
+            android:enabled="false"
+            android:visibility="gone"
+            android:text="@string/open_url_btn" />
     </LinearLayout>
 
     <ImageView
