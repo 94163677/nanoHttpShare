@@ -2,10 +2,12 @@ package air.kanna.nanohttpshareandroid.activity;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AlertDialog;
@@ -49,6 +51,7 @@ public class MainActivity extends BasicActivity {
     private ImageView qrcodeIv;
     private Button startStopBtn;
     private Button retryBtn;
+    private Button openBtn;
 
     private String ipAddr = null;
     private int port = 8090;
@@ -87,6 +90,7 @@ public class MainActivity extends BasicActivity {
         qrcodeIv = findViewById(R.id.qrcode_iv);
         startStopBtn = findViewById(R.id.start_stop_btn);
         retryBtn = findViewById(R.id.retry_btn);
+        openBtn = findViewById(R.id.open_btn);
 
         initData();
         initControl();
@@ -109,6 +113,8 @@ public class MainActivity extends BasicActivity {
 
         MappingFunction function = new MappingFunction(getString(R.string.sys_message_title), genUUID());
         TextTransferFilterMapping transfer = new TextTransferFilterMapping(function);
+        transfer.setFlushBtn(getString(R.string.sys_flush_button));
+        transfer.setSendBtn(getString(R.string.sys_send_button));
         service.addFilterMapping(transfer);
 
         for(File file : list) {
@@ -119,12 +125,17 @@ public class MainActivity extends BasicActivity {
             for(file = file.getParentFile(); !"Android".equals(file.getName()); file = file.getParentFile()){}
             file = file.getParentFile();
 
-            String name = file.getName();
-            if("".equalsIgnoreCase(name)){
-                name = file.getPath();
+            String name = file.getAbsolutePath();
+            if(name.contains("/emulated/")){
+                name = getString(R.string.sys_internal_title);
+            }else{
+                name = getString(R.string.sys_external_title);
             }
             function = new MappingFunction(name, genUUID());
             FileShareFilterMapping mapping = new FileShareFilterMapping(file, function);
+            mapping.setHomeString(getString(R.string.sys_root_title));
+            mapping.setListTitle(getString(R.string.sys_file_list_title));
+
             service.addFilterMapping(mapping);
         }
     }
@@ -133,11 +144,18 @@ public class MainActivity extends BasicActivity {
         return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
-    private void showQRCode(){
+    private String getShareUrl(){
         if(ipAddr == null){
+            return null;
+        }
+        return "http://" + ipAddr + ":" + port;
+    }
+
+    private void showQRCode(){
+        String url = getShareUrl();
+        if(url == null){
             return;
         }
-        String url = "http://" + ipAddr + ":" + port;
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         Map<EncodeHintType, String> param = new HashMap<>();
         Display defaultDisplay = getWindowManager().getDefaultDisplay();
@@ -202,6 +220,22 @@ public class MainActivity extends BasicActivity {
                 }
             }
         });
+        openBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openUrl();
+            }
+        });
+    }
+
+    private void openUrl(){
+        String url = getShareUrl();
+        if(url == null){
+            return;
+        }
+        Uri uri = Uri.parse(url);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
     }
 
     private void startService(){
@@ -211,6 +245,8 @@ public class MainActivity extends BasicActivity {
         try {
             service.start(NanoHTTPD.SOCKET_READ_TIMEOUT);
             startStopBtn.setText(getString(R.string.stop_service_btn));
+            openBtn.setVisibility(View.VISIBLE);
+            openBtn.setEnabled(true);
         }catch(Exception e) {
             logger.error("Start service error", e);
             showErrorMessage(getString(R.string.sys_start_service_error_msg, e.getMessage()), null);
@@ -224,6 +260,8 @@ public class MainActivity extends BasicActivity {
         service.closeAllConnections();
         service.stop();
         startStopBtn.setText(R.string.start_service_btn);
+        openBtn.setVisibility(View.GONE);
+        openBtn.setEnabled(false);
     }
 
     private int getRandomPort() {
@@ -244,6 +282,8 @@ public class MainActivity extends BasicActivity {
         retryBtn.setVisibility(View.GONE);
         retryBtn.setEnabled(false);
         startStopBtn.setEnabled(true);
+        openBtn.setVisibility(View.GONE);
+        openBtn.setEnabled(false);
         ipAddrTv.setText(ipAddr);
     }
 
@@ -251,6 +291,8 @@ public class MainActivity extends BasicActivity {
         ipAddr = null;
         retryBtn.setVisibility(View.VISIBLE);
         retryBtn.setEnabled(true);
+        openBtn.setVisibility(View.GONE);
+        openBtn.setEnabled(false);
         startStopBtn.setEnabled(false);
         ipAddrTv.setText(R.string.sys_no_network);
     }
