@@ -32,7 +32,7 @@ public class FilterMappingUtil {
     
     public static Response getResourceResponse(String resourcePath) {
         try {
-            InputStream ins = ClassLoader.getSystemResourceAsStream(resourcePath);
+            InputStream ins = FilterMappingUtil.class.getClassLoader().getResourceAsStream(resourcePath);
             if(ins == null || ins.available() <= 0) {
                 return ShareHttpService.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_HTML, "");
             }
