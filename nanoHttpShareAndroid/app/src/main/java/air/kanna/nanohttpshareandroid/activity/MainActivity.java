@@ -1,24 +1,42 @@
 package air.kanna.nanohttpshareandroid.activity;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AlertDialog;
+import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import air.kanna.nanoHttpShare.ShareHttpService;
 import air.kanna.nanoHttpShare.logger.Logger;
 import air.kanna.nanoHttpShare.logger.LoggerProvider;
+import air.kanna.nanoHttpShare.mapping.MappingFunction;
+import air.kanna.nanoHttpShare.mapping.fileshare.FileShareFilterMapping;
+import air.kanna.nanoHttpShare.mapping.texttrans.TextTransferFilterMapping;
 import air.kanna.nanohttpshareandroid.R;
+import air.kanna.nanohttpshareandroid.activity.base.ActivityManager;
 import air.kanna.nanohttpshareandroid.activity.base.BasicActivity;
 import air.kanna.nanohttpshareandroid.util.NetworkUtil;
+import fi.iki.elonen.NanoHTTPD;
 
 public class MainActivity extends BasicActivity {
     private static final String[] STORAGE_PERMISSION = new String[]{
@@ -42,7 +60,7 @@ public class MainActivity extends BasicActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        setCanBeBack(false);
         logger = LoggerProvider.getLogger(MainActivity.class);
         //检查并获取存储权限
         if(!checkStoragePermissionAndApply(STORAGE_PERMISSION, REQ_PERMISSION_STORAGE)){
@@ -54,6 +72,13 @@ public class MainActivity extends BasicActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        showQRCode();
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        stopService();
     }
 
     private void init(){
@@ -73,6 +98,90 @@ public class MainActivity extends BasicActivity {
 
         checkAndGetIP();
 
+        service = new ShareHttpService(port);
+        /**应用程序的内外部路径
+         * 内部：/storage/emulated/0/Android/data/air.kanna.nanohttpshareandroid/files/mounted
+         * 外部：/storage/0000-0000/Android/data/air.kanna.nanohttpshareandroid/files/mounted
+         * 所以后面要往上查找“Android”文件夹，它的父目录就是内外部的根目录
+         * TODO 仅仅在三星手机上测试过，其他手机还不明确
+         */
+        File[] list = getExternalFilesDirs(Environment.MEDIA_MOUNTED);
+
+        MappingFunction function = new MappingFunction(getString(R.string.sys_message_title), genUUID());
+        TextTransferFilterMapping transfer = new TextTransferFilterMapping(function);
+        service.addFilterMapping(transfer);
+
+        for(File file : list) {
+            if(file == null || !file.exists() || !file.isDirectory()){
+                continue;
+            }
+
+            for(file = file.getParentFile(); !"Android".equals(file.getName()); file = file.getParentFile()){}
+            file = file.getParentFile();
+
+            String name = file.getName();
+            if("".equalsIgnoreCase(name)){
+                name = file.getPath();
+            }
+            function = new MappingFunction(name, genUUID());
+            FileShareFilterMapping mapping = new FileShareFilterMapping(file, function);
+            service.addFilterMapping(mapping);
+        }
+    }
+
+    private String genUUID(){
+        return UUID.randomUUID().toString().replaceAll("-", "");
+    }
+
+    private void showQRCode(){
+        if(ipAddr == null){
+            return;
+        }
+        String url = "http://" + ipAddr + ":" + port;
+        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+        Map<EncodeHintType, String> param = new HashMap<>();
+        Display defaultDisplay = getWindowManager().getDefaultDisplay();
+        Point point = new Point();
+
+        //获取屏幕宽度（反正是高宽最小的那个）的9成，小于400像素就用400像素
+        defaultDisplay.getSize(point);
+        int size = point.x > point.y ? point.y : point.x;
+        size *= 0.9;
+        if(size < 400){
+            size = 400;
+        }
+        size = 400;
+
+        param.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+        param.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.Q.name());//纠错等级，从低到高为LMQH
+
+        try{
+            BitMatrix bitMatrix = multiFormatWriter.encode(url, BarcodeFormat.QR_CODE, size, size, param);
+            Bitmap bitmap = getBitmapFromBitMatrix(bitMatrix);
+            qrcodeIv.setImageBitmap(bitmap);
+        }catch (Exception e){
+            logger.error("Create QRCode error.", e);
+            showErrorMessage(getString(R.string.sys_create_qrcode_error_msg, e.getMessage()), null);
+        }
+    }
+
+    private Bitmap getBitmapFromBitMatrix(BitMatrix bitMatrix){
+        int width = bitMatrix.getWidth();
+        int height = bitMatrix.getHeight();
+
+        int[] pixels = new int[width * height];
+        for(int y = 0; y < height; y++){
+            for(int x = 0; x < width; x++){
+                if(bitMatrix.get(x, y)){
+                    pixels[y * width + x] = Color.BLACK;
+                } else {
+                    pixels[y * width + x] = Color.WHITE;
+                }
+            }
+        }
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+        return bitmap;
     }
 
     private void initControl(){
@@ -80,8 +189,41 @@ public class MainActivity extends BasicActivity {
             @Override
             public void onClick(View v) {
                 checkAndGetIP();
+                showQRCode();
             }
         });
+        startStopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(service.isAlive()){
+                    stopService();
+                }else{
+                    startService();
+                }
+            }
+        });
+    }
+
+    private void startService(){
+        if(service.isAlive()) {
+            return;
+        }
+        try {
+            service.start(NanoHTTPD.SOCKET_READ_TIMEOUT);
+            startStopBtn.setText(getString(R.string.stop_service_btn));
+        }catch(Exception e) {
+            logger.error("Start service error", e);
+            showErrorMessage(getString(R.string.sys_start_service_error_msg, e.getMessage()), null);
+        }
+    }
+
+    private void stopService(){
+        if(!service.isAlive()) {
+            return;
+        }
+        service.closeAllConnections();
+        service.stop();
+        startStopBtn.setText(R.string.start_service_btn);
     }
 
     private int getRandomPort() {
@@ -140,7 +282,7 @@ public class MainActivity extends BasicActivity {
                             .setNegativeButton(R.string.sys_cancel_button, new DialogInterface.OnClickListener(){
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    finish();//不给权限则退出
+                                    ActivityManager.closeApp();//不给权限则退出
                                 }
                             })
                             .show();

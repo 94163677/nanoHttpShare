@@ -1,6 +1,8 @@
 package air.kanna.nanohttpshareandroid.activity.base;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -94,6 +96,13 @@ public class BasicActivity extends AppCompatActivity {
         }
     }
 
+    protected void showErrorMessage(String msg, DialogInterface.OnClickListener listener){
+        new AlertDialog.Builder(current)
+                .setTitle(R.string.sys_error_title)
+                .setMessage(msg)
+                .setPositiveButton(R.string.sys_ok_button, listener)
+                .show();
+    }
 
     protected boolean checkStoragePermissionAndApply(String[] permissions, int requestCode){
         if(permissions == null || permissions.length <= 0){

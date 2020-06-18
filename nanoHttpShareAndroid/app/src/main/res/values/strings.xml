@@ -17,11 +17,14 @@
     <string name="sys_infor_title">提示</string>
     <string name="sys_warning_title">警告</string>
     <string name="sys_error_title">错误</string>
+    <string name="sys_message_title">文字传输</string>
 
     <string name="sys_no_network">没有网络</string>
 
     <string name="sys_copy_finish">已复制到剪切板</string>
     <string name="sys_exit_app_msg">再按一次退出程序</string>
+    <string name="sys_create_qrcode_error_msg">创建二维码失败：%s</string>
+    <string name="sys_start_service_error_msg">启动共享服务失败：%s</string>
 
     <string name="sys_apply_storage_msg">本APP运行必须申请读写存储的权限，重新申请请按“确定”，按“取消”退出APP。</string>
 
