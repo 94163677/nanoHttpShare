@@ -332,6 +332,13 @@ public class FileShareFilterMapping implements FilterMapping {
             result[0] = '/' + function.getFunctionUri() + '/' + pathStr;
             result[1] = '/' + function.getFunctionUri() + '/' + DOWNLOAD_URI + '/' + pathStr;
         }
+        //URLDecoder.decode 里面，加号会被转成空格（JDK1.8是这样，其他版本不知道）
+        if(result[0] != null) {
+            result[0] = result[0].replaceAll("\\+", "%2B");
+        }
+        if(result[1] != null) {
+            result[1] = result[1].replaceAll("\\+", "%2B");
+        }
         return result;
     }
     
