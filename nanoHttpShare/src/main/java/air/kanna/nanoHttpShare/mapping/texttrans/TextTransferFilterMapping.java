@@ -43,6 +43,8 @@ public class TextTransferFilterMapping implements FilterMapping {
     private String submitUri;
     
     private String htmlStr = null;
+    private String sendBtn = "发送";
+    private String flushBtn = "刷新";
     
     public TextTransferFilterMapping() {
         textList = new ArrayList<>();
@@ -304,13 +306,13 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "        <!-- 底部 -->\r\n" + 
                 "        <footer>\r\n" + 
                 "            <div class=\"footer-lbutton\">\r\n" + 
-                "                <button id=\"flushBtn\" class=\"send_button\">刷新</button>\r\n" + 
+                "                <button id=\"flushBtn\" class=\"send_button\">" + flushBtn + "</button>\r\n" + 
                 "            </div>\r\n" + 
                 "            <div class=\"footer-text\">\r\n" + 
                 "                <textarea id=\"messageText\" type=\"text\" class=\"input-text\"></textarea>\r\n" + 
                 "            </div>\r\n" + 
                 "            <div class=\"footer-rbutton\">\r\n" + 
-                "                <button id=\"sendBtn\" class=\"send_button\">发送</button>\r\n" + 
+                "                <button id=\"sendBtn\" class=\"send_button\">" + sendBtn + "</button>\r\n" + 
                 "            </div>\r\n" + 
                 "        </footer>\r\n" + 
                 "    </body>\r\n" + 
@@ -367,5 +369,23 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "</html>";
         
         return htmlStr;
+    }
+
+    public String getSendBtn() {
+        return sendBtn;
+    }
+
+    public String getFlushBtn() {
+        return flushBtn;
+    }
+
+    public void setSendBtn(String sendBtn) {
+        this.sendBtn = sendBtn;
+        htmlStr = null;
+    }
+
+    public void setFlushBtn(String flushBtn) {
+        this.flushBtn = flushBtn;
+        htmlStr = null;
     }
 }
