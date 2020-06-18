@@ -113,6 +113,8 @@ public class MainActivity extends BasicActivity {
 
         MappingFunction function = new MappingFunction(getString(R.string.sys_message_title), genUUID());
         TextTransferFilterMapping transfer = new TextTransferFilterMapping(function);
+        transfer.setFlushBtn(getString(R.string.sys_flush_button));
+        transfer.setSendBtn(getString(R.string.sys_send_button));
         service.addFilterMapping(transfer);
 
         for(File file : list) {
