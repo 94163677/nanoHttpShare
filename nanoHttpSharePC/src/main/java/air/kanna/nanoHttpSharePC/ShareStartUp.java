@@ -1,6 +1,7 @@
 package air.kanna.nanoHttpSharePC;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -70,6 +71,7 @@ public class ShareStartUp {
     private NanoSharePCConfig config;
     private NanoSharePCConfigService configService;
     private ShareHttpService service;
+    private JTextField urlTf;
     
 
     /**
@@ -94,7 +96,7 @@ public class ShareStartUp {
         
         JPanel panel = new JPanel();
         frmHttp.getContentPane().add(panel, BorderLayout.NORTH);
-        panel.setLayout(new GridLayout(2, 1, 0, 0));
+        panel.setLayout(new GridLayout(3, 1, 0, 0));
         
         JPanel panel_2 = new JPanel();
         FlowLayout flowLayout = (FlowLayout) panel_2.getLayout();
@@ -106,8 +108,8 @@ public class ShareStartUp {
         
         basePathCb = new JComboBox<>();
         panel_2.add(basePathCb);
-        basePathCb.setModel(new DefaultComboBoxModel<String>(new String[] {"5555555555555555555"}));
         basePathCb.setEditable(true);
+        basePathCb.setPreferredSize(new Dimension(260, 26));
         
         baseSelectPathBtn = new JButton("...");
         panel_2.add(baseSelectPathBtn);
@@ -135,6 +137,20 @@ public class ShareStartUp {
         portTf.setEditable(false);
         panel_3.add(portTf);
         portTf.setColumns(10);
+        
+        JPanel panel_4 = new JPanel();
+        FlowLayout flowLayout_2 = (FlowLayout) panel_4.getLayout();
+        flowLayout_2.setAlignment(FlowLayout.LEFT);
+        panel.add(panel_4);
+        
+        JLabel lblNewLabel_2 = new JLabel("URL：");
+        panel_4.add(lblNewLabel_2);
+        
+        urlTf = new JTextField();
+        urlTf.setText("http://localhost:8090");
+        urlTf.setEditable(false);
+        panel_4.add(urlTf);
+        urlTf.setColumns(30);
         
         JPanel panel_1 = new JPanel();
         frmHttp.getContentPane().add(panel_1, BorderLayout.SOUTH);
@@ -168,6 +184,7 @@ public class ShareStartUp {
         
         ipAddrTf.setText(ipAddr);
         portTf.setText("" + port);
+        urlTf.setText("http://" + ipAddr + ':' + port);
         
         imageLb.setText("");
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
