@@ -27,6 +27,7 @@ public class TextTransferFilterMapping implements FilterMapping {
     
     private static final String SUBMIT_URI = "sendText";
     private static final String MESSAGE_URI = "message";
+    private static final String MESSAGE_COUNT = "count";
     private static final String JQUERY_URI = "@jquery";
     
     private static final String MESSAGE_PARAM = "messageText";
@@ -40,6 +41,7 @@ public class TextTransferFilterMapping implements FilterMapping {
     private String indexUri;
     private String scriptUri;
     private String messageUri;
+    private String messageCount;
     private String submitUri;
     
     private String htmlStr = null;
@@ -72,6 +74,9 @@ public class TextTransferFilterMapping implements FilterMapping {
             if(uri.equals(messageUri)) {
                 return true;
             }else
+            if(uri.equals(messageCount)) {
+                return true;
+            }else
             if(uri.equals(scriptUri)) {
                 return true;
             }
@@ -99,6 +104,9 @@ public class TextTransferFilterMapping implements FilterMapping {
         if(uri.equals(messageUri)) {
             return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, getMessageList(ip));
         }
+        if(uri.equals(messageCount)) {
+            return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, getMessageCount());
+        }
         if(uri.equals(indexUri)) {
             return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, getIndexString());
         }
@@ -122,6 +130,7 @@ public class TextTransferFilterMapping implements FilterMapping {
         submitUri = indexUri + '/' + SUBMIT_URI;
         scriptUri = indexUri + '/' + JQUERY_URI;
         messageUri = indexUri + '/' + MESSAGE_URI;
+        messageCount = indexUri + '/' + MESSAGE_COUNT;
     }
     
     private Response addMessage(IHTTPSession session, String ip) {
@@ -136,6 +145,7 @@ public class TextTransferFilterMapping implements FilterMapping {
                 msg.setSendIP(ip);
                 msg.setSendDate(new Date());
                 msg.setMessage(message);
+                msg.setFixedMessage(fixMessage(message));
                 textList.add(msg);
             }
             
@@ -146,21 +156,34 @@ public class TextTransferFilterMapping implements FilterMapping {
         }
     }
     
+    private String fixMessage(String orgMessage) {
+        if(StringTool.isAllSpacesString(orgMessage)) {
+            return "";
+        }
+        String fixed = orgMessage.replaceAll("\\\\", "\\\\\\\\");
+        fixed = orgMessage.replaceAll("\\\"", "\\\\\"");
+        fixed = orgMessage.replaceAll("\n", "\\\\n");
+        
+        return fixed;
+    }
+    
+    private String getMessageCount() {
+        return new StringBuilder()
+                .append('{').append("\"count\":").append(textList.size()).append('}')
+                .toString();
+    }
+    
     private String getMessageList(String ip) {
         StringBuilder sb = new StringBuilder();
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         
         sb.append('[');
         for(TransferMessage msg : textList) {
-            String text = msg.getMessage();
             String dateStr = format.format(msg.getSendDate());
-            
-            text = text.replaceAll("\\\\", "\\\\\\\\");
-            text = text.replaceAll("\\\"", "\\\\\"");
-            
+
             sb.append('{').append("\"date\":\"").append(dateStr)
                 .append("\",\"isSender\":").append(StringTool.equals(ip, msg.getSendIP()))
-                .append(",\"text\":\"").append(text).append("\"},");
+                .append(",\"text\":\"").append(msg.getFixedMessage()).append("\"},");
         }
         if(textList.size() > 0) {
             sb.deleteCharAt(sb.length() - 1);
@@ -193,7 +216,7 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "            footer {\r\n" + 
                 "                position: fixed;\r\n" + 
                 "                width: 100%;\r\n" + 
-                "                height: 80px;\r\n" + 
+                "                height: 5%;\r\n" + 
                 "                min-height: 80px;\r\n" + 
                 "                border-top: solid 1px #ddd;\r\n" + 
                 "                left: 0px;\r\n" + 
@@ -218,6 +241,7 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "            }\r\n" + 
                 "            ul li{\r\n" + 
                 "                list-style-type: none;\r\n" + 
+                "                padding-right: 20%;\r\n" + 
                 "                margin-bottom: 10px;\r\n" + 
                 "            }\r\n" + 
                 "            .message-box{\r\n" + 
@@ -229,14 +253,14 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "            }\r\n" + 
                 "            .footer-text {\r\n" + 
                 "                height: 100%;\r\n" + 
-                "                padding-right: 100px;\r\n" + 
-                "                padding-left: 50px;\r\n" + 
+                "                padding-right: 15%;\r\n" + 
+                "                padding-left: 0;\r\n" + 
                 "            }\r\n" + 
                 "            .footer-rbutton {\r\n" + 
                 "                position: absolute;\r\n" + 
                 "                margin-left: 3px;\r\n" + 
-                "                width: 100px;\r\n" + 
-                "                height: 80px;\r\n" + 
+                "                width: 15%;\r\n" + 
+                "                height: 100%;\r\n" + 
                 "                right: 0px;\r\n" + 
                 "                bottom: 0px;\r\n" + 
                 "                text-align: center;\r\n" + 
@@ -245,8 +269,8 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "            .footer-lbutton {\r\n" + 
                 "                position: absolute;\r\n" + 
                 "                margin-right: 3px;\r\n" + 
-                "                width: 50px;\r\n" + 
-                "                height: 80px;\r\n" + 
+                "                width: 10%;\r\n" + 
+                "                height: 100%;\r\n" + 
                 "                left: 0px;\r\n" + 
                 "                bottom: 0px;\r\n" + 
                 "                text-align: center;\r\n" + 
@@ -260,6 +284,8 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "            }\r\n" + 
                 "            .chart_self{\r\n" + 
                 "                text-align: right;\r\n" + 
+                "                padding-left: 20%;\r\n" + 
+                "                padding-right: 0;\r\n" + 
                 "            }\r\n" + 
                 "            .chart_text, .chart_text_self{\r\n" + 
                 "                word-break: break-all;\r\n" + 
@@ -267,6 +293,7 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "                position: relative;\r\n" + 
                 "                background-color: white;\r\n" + 
                 "                display: inline-block;\r\n" + 
+                "                font-size: 3vw;\r\n" + 
                 "            }\r\n" + 
                 "            .chart_text_self{\r\n" + 
                 "                background-color: #5FD05E;\r\n" + 
@@ -277,37 +304,10 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "    <body>" +
                 "        <div class=\"message-box\">\r\n" + 
                 "            <ul id=\"msg_list\">\r\n" + 
-                "                <li>\r\n" + 
-                "                    <div class=\"chart_text\">你好啊！</div>\r\n" + 
-                "                </li>\r\n" + 
-                "                <li class=\"chart_self\">\r\n" + 
-                "                    <div class=\"chart_text_self\">你好啊！</div>\r\n" + 
-                "                </li>\r\n" + 
-                "                <li>\r\n" + 
-                "                    <div class=\"chart_text\">你好啊！</div>\r\n" + 
-                "                </li>\r\n" + 
-                "                <li class=\"chart_self\">\r\n" + 
-                "                    <div class=\"chart_text_self\">你好啊！</div>\r\n" + 
-                "                </li>\r\n" + 
-                "                <li>\r\n" + 
-                "                    <div class=\"chart_text\">你好啊！</div>\r\n" + 
-                "                </li>\r\n" + 
-                "                <li class=\"chart_self\">\r\n" + 
-                "                    <div class=\"chart_text_self\">你好啊！</div>\r\n" + 
-                "                </li>\r\n" + 
-                "                <li>\r\n" + 
-                "                    <div class=\"chart_text\">你好啊！</div>\r\n" + 
-                "                </li>\r\n" + 
-                "                <li class=\"chart_self\">\r\n" + 
-                "                    <div class=\"chart_text_self\">你好啊！</div>\r\n" + 
-                "                </li>\r\n" + 
                 "            </ul>\r\n" + 
                 "        </div>\r\n" + 
                 "        <!-- 底部 -->\r\n" + 
                 "        <footer>\r\n" + 
-                "            <div class=\"footer-lbutton\">\r\n" + 
-                "                <button id=\"flushBtn\" class=\"send_button\">" + flushBtn + "</button>\r\n" + 
-                "            </div>\r\n" + 
                 "            <div class=\"footer-text\">\r\n" + 
                 "                <textarea id=\"messageText\" type=\"text\" class=\"input-text\"></textarea>\r\n" + 
                 "            </div>\r\n" + 
@@ -317,6 +317,7 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "        </footer>\r\n" + 
                 "    </body>\r\n" + 
                 "    <script type=\"text/javascript\">\r\n" + 
+                "        var msgCount = 0;\r\n" + 
                 "        $(\"#sendBtn\").click(function(){\r\n" + 
                 "            var message = $('#messageText').val();\r\n" + 
                 "            if(message == undefined || message == null || message == ''){\r\n" + 
@@ -365,6 +366,25 @@ public class TextTransferFilterMapping implements FilterMapping {
                 "        $(function(){\r\n" + 
                 "            reloadMessage();\r\n" +
                 "        });\r\n" + 
+                "\r\n" + 
+                "        function reflush(){\r\n" + 
+                "            $.get(\"" + messageCount + "\", function(data){\r\n" + 
+                "                var count = JSON.parse(data);\r\n" + 
+                "                var number = -1;\r\n" + 
+                "                if(count == undefined || count == null || count.count == undefined || count.count == null){\r\n" + 
+                "                    number = -1;\r\n" + 
+                "                }else{\r\n" + 
+                "                    number = count.count;\r\n" + 
+                "                }\r\n" + 
+                "\r\n" + 
+                "                if(number < 0 || number != msgCount){\r\n" + 
+                "                    msgCount = count.count;\r\n" + 
+                "                    reloadMessage();\r\n" + 
+                "                }\r\n" + 
+                "            });\r\n" + 
+                "        }\r\n" + 
+                "\r\n" + 
+                "        setInterval('reflush()', 2000);\r\n" + 
                 "    </script>\r\n" + 
                 "</html>";
         

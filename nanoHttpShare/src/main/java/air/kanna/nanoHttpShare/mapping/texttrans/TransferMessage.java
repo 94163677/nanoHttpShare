@@ -7,6 +7,7 @@ public class TransferMessage {
     private Date sendDate;
     
     private String message;
+    private String fixedMessage;
 
     public String getSendIP() {
         return sendIP;
@@ -30,5 +31,13 @@ public class TransferMessage {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getFixedMessage() {
+        return fixedMessage;
+    }
+
+    public void setFixedMessage(String fixedMessage) {
+        this.fixedMessage = fixedMessage;
     }
 }
