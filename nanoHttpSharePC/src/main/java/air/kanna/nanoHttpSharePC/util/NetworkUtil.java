@@ -54,7 +54,7 @@ public class NetworkUtil {
      */
     private static boolean isValidInterface(NetworkInterface ni) throws SocketException {
         return !ni.isLoopback() 
-                && !ni.isPointToPoint() 
+                && !ni.isPointToPoint()
                 && ni.isUp() 
                 && !ni.isVirtual()
                 && (ni.getName().startsWith("eth") 
