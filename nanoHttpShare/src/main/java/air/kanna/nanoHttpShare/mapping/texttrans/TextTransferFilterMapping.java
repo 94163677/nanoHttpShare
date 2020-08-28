@@ -15,6 +15,7 @@ import air.kanna.nanoHttpShare.logger.LoggerProvider;
 import air.kanna.nanoHttpShare.mapping.FilterMapping;
 import air.kanna.nanoHttpShare.mapping.FilterMappingUtil;
 import air.kanna.nanoHttpShare.mapping.MappingFunction;
+import air.kanna.nanoHttpShare.mapping.impl.RootFilterMapping;
 import air.kanna.nanoHttpShare.util.StringTool;
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Method;
@@ -28,7 +29,6 @@ public class TextTransferFilterMapping implements FilterMapping {
     private static final String SUBMIT_URI = "sendText";
     private static final String MESSAGE_URI = "message";
     private static final String MESSAGE_COUNT = "count";
-    private static final String JQUERY_URI = "@jquery";
     
     private static final String MESSAGE_PARAM = "messageText";
     
@@ -128,7 +128,7 @@ public class TextTransferFilterMapping implements FilterMapping {
         }
         indexUri = '/' + this.function.getFunctionUri();
         submitUri = indexUri + '/' + SUBMIT_URI;
-        scriptUri = indexUri + '/' + JQUERY_URI;
+        scriptUri = RootFilterMapping.JQUERY;
         messageUri = indexUri + '/' + MESSAGE_URI;
         messageCount = indexUri + '/' + MESSAGE_COUNT;
     }
