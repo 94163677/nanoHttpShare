@@ -43,7 +43,7 @@ import fi.iki.elonen.NanoHTTPD;
 public class MainActivity extends BasicActivity {
     private static final String[] STORAGE_PERMISSION = new String[]{
             Manifest.permission.READ_EXTERNAL_STORAGE,
-//            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
     private TextView ipAddrTv;

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">HTTP分享工具</string>
     <string name="author_name">Create by Hh7</string>
-    <string name="version">V1.0.1</string>
+    <string name="version">V1.0.3</string>
 
     <string name="ip_text">IP地址：</string>
     <string name="port_text">端口号：</string>
