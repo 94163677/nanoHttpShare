@@ -17,8 +17,9 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 public class RootFilterMapping implements FilterMapping {
     private final Logger logger = LoggerProvider.getLogger(ShareHttpService.class);
     
-    private static final String ROOT = "/";
-    private static final String ICON = "/favicon.ico";
+    public static final String ROOT = "/";
+    public static final String ICON = "/favicon.ico";
+    public static final String JQUERY = "/jquery.js";
     
     private List<MappingFunction> functions = new ArrayList<>();
 
@@ -33,6 +34,7 @@ public class RootFilterMapping implements FilterMapping {
         switch(uri) {
             case ROOT: return true;
             case ICON: return true;
+            case JQUERY: return true;
         }
         return false;
     }
@@ -50,7 +52,8 @@ public class RootFilterMapping implements FilterMapping {
         String uri = session.getUri();
         switch(uri) {
             case ROOT: return getRootResponse(session);
-            case ICON: return getIconResponse(session);
+            case ICON: return FilterMappingUtil.getResourceResponse("air/kanna/nanoHttpShare/data/HttpShareIcon.ico");
+            case JQUERY: return FilterMappingUtil.getResourceResponse("air/kanna/nanoHttpShare/data/jquery-3.5.1.min.js");
         }
         return null;
     }
@@ -72,10 +75,6 @@ public class RootFilterMapping implements FilterMapping {
         builder.append("</body>\n</html>\n");
         
         return ShareHttpService.newFixedLengthResponse(Status.OK, ShareHttpService.FIXED_MIME_HTML, builder.toString());
-    }
-    
-    private Response getIconResponse(IHTTPSession session) {
-        return FilterMappingUtil.getResourceResponse("air/kanna/nanoHttpShare/data/HttpShareIcon.ico");
     }
 
     public List<MappingFunction> getFunctions() {
